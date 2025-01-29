@@ -84,7 +84,7 @@ public with sharing class NextStepFuture {
         // Query the roles using the provided IDs
         List<UserRole> roles = [SELECT Id, Name FROM UserRole WHERE Id IN :roleIds];
         for (UserRole role : roles) {
-            role.Name = 'CRO'; // Update the name to 'CRO'
+            role.Name = 'CEO'; // Update the name to 'CRO'
         }
 
         if (!roles.isEmpty()) {

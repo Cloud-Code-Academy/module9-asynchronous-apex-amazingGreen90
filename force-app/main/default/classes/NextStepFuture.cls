@@ -61,12 +61,6 @@ public with sharing class NextStepFuture {
 
         // Get the current user's role ID
         String userRoleId = UserInfo.getUserRoleId();
-        if (userRoleId == null) {
-            // Create a new role named 'Test Role' since the user has no role
-            UserRole testRole = new UserRole(Name = 'Test Role');
-            insert testRole;
-            userRoleId = testRole.Id; // Assign the new role ID for the update
-        }
         // Call the future method to update the role name
         updateUserRoleNameAsync(new List<String>{userRoleId});
     }
@@ -87,14 +81,20 @@ public with sharing class NextStepFuture {
      */
     @future
     private static void updateUserRoleNameAsync(List<String> roleIds) {
-        // Query the roles using the provided IDs
         List<UserRole> roles = [SELECT Id, Name FROM UserRole WHERE Id IN :roleIds];
-        for (UserRole role : roles) {
-            role.Name = 'CRO'; // Update the name to 'CRO'
-        }
-
         if (!roles.isEmpty()) {
-            update roles; // Perform the update
+            for (UserRole role : roles) {
+                role.Name = 'CRO';
+            }
+            update roles;
+        } else {
+            UserRole newRole = new UserRole(Name = 'CRO');
+            insert newRole;
+            List<User> users = [SELECT Id FROM User WHERE Id IN :roleIds];
+            for (User user : users) {
+                user.UserRoleId = newRole.Id;
+            }
+            update users;
         }
-    }
+    }     
 }

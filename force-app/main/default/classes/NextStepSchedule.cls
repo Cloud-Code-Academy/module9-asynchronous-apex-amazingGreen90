@@ -19,16 +19,18 @@
  * 
  * Note: To make full use of this class, ensure that the NextStepBatch class is implemented and operational.
  */
-public with sharing class NextStepSchedule {
+// This is the NextStepBatchScheduler class, which implements the Schedulable interface and can be scheduled
+// This is the NextStepBatchScheduler class, which implements the Schedulable interface and can be scheduled
+// This class will be used for scheduling the NextStepBatch job.
+// This class will be used for scheduling the NextStepBatch job.
+// This class will be used for scheduling the NextStepBatch job.
+public with sharing class NextStepSchedule implements Schedulable {
 
-    /*
-     * Update/Uncomment the template code to create a method
-     * Execute the batch job NextStepBatch using the Database.executeBatch method
-     * Configure and schedule the job using the Apex Scheduler in Salesforce Setup
-     * Code to execute the batch job should not need to change other than uncommenting the code
-     */
-    //[public | private ] [static] data_type execute (input parameters) {
-        //NextStepBatch batch = new NextStepBatch(); 
-        //Database.executeBatch(batch);
-    //}
-}
+        public void execute(SchedulableContext sc) {
+            // Create a new instance of the NextStepBatch class
+            NextStepBatch batch = new NextStepBatch();
+
+            // Execute the batch job
+            Database.executeBatch(batch);
+        }
+    }

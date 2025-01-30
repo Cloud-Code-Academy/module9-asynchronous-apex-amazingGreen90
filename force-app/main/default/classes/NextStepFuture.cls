@@ -19,58 +19,82 @@
  */
 public with sharing class NextStepFuture {
 
-    /* 
+    /**
      * Question 1
-     * Update/Uncomment the template code to create a method
-     * Create a future method that updates all account and opportunities next step to 'Meeting in the future'
-     * Account Next Step field is a custom field
-     * Opportunity Next Step field is a standard field
-     * Update the corresponding test class AsynchronousTest and test method nextStepFuture_testUpdateAllNextStep to cover test this method
+     * Create a future method that updates all Account and Opportunity records' Next Step fields to 'Meeting in the future'.
+     * Account Next Step field is a custom field.
+     * Opportunity Next Step field is a standard field.
+     * Update the corresponding test class AsynchronousTest and test method nextStepFuture_testUpdateAllNextStep to cover this method.
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    @future
+    public static void updateAllNextStep() {
+        final String FUTURE_NEXT_STEP = 'Meeting in the future';
 
-    /*
-    * Question 2
-    * Update/Uncomment the template code to create a method
-    * Create a method that inserts a big deal opportunity and updates the user role name to 'CRO'
-    * Update the corresponding test class AsynchronousTest and test method nextStepFuture_testCreateDealAndUpdateRole to cover test this method
-    */
-    //Mix DML Error happens when you try to perform DML operations on setup and non-setup objects in a single transaction.
+        // Query all Accounts and update their Next Step field
+        List<Account> accounts = [SELECT Id, Next_Step__c FROM Account];
+        for (Account acc : accounts) {
+            acc.Next_Step__c = FUTURE_NEXT_STEP;
+        }
+        if (!accounts.isEmpty()) {
+            update accounts;
+        }
+
+        // Query all Opportunities and update their Next Step field
+        List<Opportunity> opportunities = [SELECT Id, NextStep FROM Opportunity];
+        for (Opportunity opp : opportunities) {
+            opp.NextStep = FUTURE_NEXT_STEP;
+        }
+        if (!opportunities.isEmpty()) {
+            update opportunities;
+        }
+    }
+
+    /**
+     * Question 2
+     * Create a method that inserts a big deal Opportunity and updates the user's role name to 'CRO'.
+     * Note: Use a future method to handle the role update because of Mixed DML restrictions.
+     */
     public static void createDealAndUpdateRole() {
+        // Insert a big deal Opportunity
         Opportunity bigDeal = new Opportunity();
         insertBigDeal(bigDeal);
 
-        UserRole[] roles = [SELECT Id, Name FROM UserRole WHERE Id = :UserInfo.getUserRoleId() OR Name = 'CRO' LIMIT 1];
-        updateUserRoleName(roles);
+        // Get the current user's role ID
+        String userRoleId = UserInfo.getUserRoleId();
+        // Call the future method to update the role name
+        updateUserRoleNameAsync(new List<String>{userRoleId});
     }
 
-    // Helper method to insert big deal
+    // Helper method to insert a big deal Opportunity
     private static void insertBigDeal(Opportunity opp) {
-        opp.Amount = 1000000;
-        opp.Name = 'Big Deal';
-        opp.StageName = 'Closed Won'; 
-        opp.CloseDate = Date.today();
-        
-        insert opp;
+        opp.Amount = 1000000; // High value for the deal
+        opp.Name = 'Big Deal'; // Name of the deal
+        opp.StageName = 'Closed Won'; // Set to a winning stage
+        opp.CloseDate = Date.today(); // Set close date to today
+
+        insert opp; // Save the Opportunity
     }
 
-
-    // Helper method to update role name
-    private static void updateUserRoleName(UserRole[] roles){
-        UserRole role;
-        if (roles.isEmpty()) {
-            role = new UserRole();
-            role.portalType = 'None'; 
-            role.CaseAccessForAccountOwner = 'Edit'; 
-            // role.OpportunityAccessForAccountOwner = 'Edit'; //This may need to be uncommented depending on your orgs Organization Wide Defaults(OWD) settings. If you are receiving FIELD_INTEGRITY_EXCEPTION, field integrity exception: unknown (Opportunity access level below organization default): [unknown], uncomment this line.
+    /**
+     * Future method to update the user role name to 'CRO'.
+     * Accepts a list of role IDs as input.
+     */
+    @future
+    private static void updateUserRoleNameAsync(List<String> roleIds) {
+        List<UserRole> roles = [SELECT Id, Name FROM UserRole WHERE Id IN :roleIds];
+        if (!roles.isEmpty()) {
+            for (UserRole role : roles) {
+                role.Name = 'CRO';
+            }
+            update roles;
         } else {
-            role = roles[0];
+            UserRole newRole = new UserRole(Name = 'CRO');
+            insert newRole;
+            List<User> users = [SELECT Id FROM User WHERE Id IN :roleIds];
+            for (User user : users) {
+                user.UserRoleId = newRole.Id;
+            }
+            update users;
         }
-
-        role.Name = 'CRO';
-
-        upsert role;
-    }
+    }     
 }

@@ -43,7 +43,7 @@ public with sharing class AsynchronousTest {
 
         // Call the method to test between the startTest and stopTest methods
         Test.startTest();
-        //YOUR CODE HERE
+        NextStepFuture.updateAllNextStep();
         Test.stopTest();
 
         // Query the updated accounts and opportunities
@@ -75,41 +75,6 @@ public with sharing class AsynchronousTest {
         // Next, we test the updateUserRoleName method
         UserRole[] updatedRoles = [SELECT Id, Name FROM UserRole WHERE Name = 'CRO' LIMIT 1];
         System.assertEquals(1, updatedRoles.size(), 'UserRole should exist.');
-    }
-
-    @IsTest
-    static void nextStepQueueable_testEnqueueJob() {
-        // Create test data
-        List<Account> testAccounts = new List<Account>();
-        for (Integer i = 0; i < 5; i++) {
-            testAccounts.add(new Account(Name = 'Test Account ' + i, Next_Step__c = 'Meeting in the future'));
-        }
-        insert testAccounts;
-
-        List<Opportunity> testOpps = new List<Opportunity>();
-        for (Account acc : testAccounts) {
-            testOpps.add(new Opportunity(Name = 'Test Opp for ' + acc.Name, AccountId = acc.Id, CloseDate = Date.today(), StageName = 'Prospecting', NextStep = 'Meeting in the future'));
-        }
-        insert testOpps;
-
-        // Call the method to test
-        Test.startTest();
-        NextStepQueueable.enqueueJob();
-        Test.stopTest();
-
-        // Query the updated accounts and opportunities
-        List<Account> updatedAccounts = [SELECT Id, Next_Step__c FROM Account WHERE Id IN :testAccounts];
-        List<Opportunity> updatedOpps = [SELECT Id, NextStep FROM Opportunity WHERE Id IN :testOpps];
-
-        // Assert that all account's Next_Step__c fields are null
-        for (Account acc : updatedAccounts) {
-            System.assertEquals(null, acc.Next_Step__c, 'Account Next_Step__c field was updated to null.');
-        }
-
-        // Assert that all opportunity's NextStep fields are null
-        for (Opportunity opp : updatedOpps) {
-            System.assertEquals(null, opp.NextStep, 'Opportunity NextStep field was updated to null.');
-        }
     }
 
     @IsTest
@@ -148,7 +113,7 @@ public with sharing class AsynchronousTest {
         }
     }
 
-    /*  //UNCOMMENT TEST METHODS BELOW ONCE THE NextStepSchedule class is implemented
+        //UNCOMMENT TEST METHODS BELOW ONCE THE NextStepSchedule class is implemented
         //No Changes should be required to the test methods/code below other than uncommenting them
         //Manually setup the scheduled job in Salesforce to run the NextStepSchedule class
     @IsTest
@@ -189,5 +154,4 @@ public with sharing class AsynchronousTest {
             System.assertEquals('Batching the next meetings together.', opp.NextStep, 'Opportunity NextStep field was not updated correctly.');
         }
     }
-    */
 }

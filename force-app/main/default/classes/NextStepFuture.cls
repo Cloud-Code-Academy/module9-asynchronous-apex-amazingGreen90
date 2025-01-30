@@ -61,6 +61,12 @@ public with sharing class NextStepFuture {
 
         // Get the current user's role ID
         String userRoleId = UserInfo.getUserRoleId();
+        if (userRoleId == null) {
+            // Create a new role named 'Test Role' since the user has no role
+            UserRole testRole = new UserRole(Name = 'Test Role');
+            insert testRole;
+            userRoleId = testRole.Id; // Assign the new role ID for the update
+        }
         // Call the future method to update the role name
         updateUserRoleNameAsync(new List<String>{userRoleId});
     }
